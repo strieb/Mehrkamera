@@ -1,0 +1,6 @@
+.vscode/
+.project
+.pydevproject
+src/test/
+src/images/
+*.npy
