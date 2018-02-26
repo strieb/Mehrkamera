@@ -6,3 +6,4 @@ src/images/
 *.npy
 *.avi
 *.bat
+*.pyc
