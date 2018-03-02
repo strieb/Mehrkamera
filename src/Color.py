@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy.ma as ma
 import synchronization 
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture("test.avi")
 
 detector =  synchronization.FlashDetector("test")
 detector.debug = True
@@ -13,7 +13,7 @@ detector.debug = True
 fig = plt.figure()
 ax = fig.add_subplot(111)
 Ln, = ax.plot(detector.means, 'o-')
-ax.set_ylim([0.1,-0.1])
+ax.set_ylim([0,5])
 plt.ion()
 plt.show()
 

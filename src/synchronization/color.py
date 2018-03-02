@@ -33,8 +33,8 @@ class ColorDetector:
             level = hsv[:, :, 1] * self._prev[:, :, 1] * hsv[:, :, 2] * self._prev[:, :, 2]
             mask = ma.masked_less(level, 0.5)
             diff = (np.mod(hsv[:, :, 0] - self._prev[:, :, 0] + 180, 360) - 180)
-            negative = ma.masked_outside(diff, -120, -90) * mask
-            positive = ma.masked_outside(diff, 90, 120) * mask
+            negative = ma.masked_outside(diff, -150, -90) * mask
+            positive = ma.masked_outside(diff, 90, 150) * mask
             self.means = np.append([(negative.count() - positive.count()) / diff.shape[0] / diff.shape[1]], self.means)
             self.means = self.means[:100]
 

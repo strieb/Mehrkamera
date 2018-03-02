@@ -4,7 +4,7 @@ import cv2
 
 def findHomography(src, dst):
     A = np.zeros((0, 9))
-    for i in range(0, 4):
+    for i in range(0, 40,10):
         A = np.concatenate((A, createCorrespondanceMatrix(src[i],dst[i])), axis=0)
     u, s, vh = np.linalg.svd(A)
     M2 = np.reshape(vh[-1] / vh[-1, -1], (3, 3))
