@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import SVD
+import homography
 import cv2
 
 np.set_printoptions(suppress=True)
@@ -20,7 +20,7 @@ dst_pts = np.delete(dst_pts,mask,0)
 
 #M_tru = np.load('matrix.npy')
 
-M = SVD.findHomography(src_pts, dst_pts)
+M = homography.findSVD(src_pts, dst_pts)
 
 M_fix = np.matmul(M_tru,np.linalg.inv(M))
 print("tru")
@@ -34,14 +34,14 @@ print(np.matmul(M_fix,M))
 
 src_M_pts = np.zeros(src_pts.shape)
 for i in range(0, src_pts.shape[0]):
-    src_M_pts[i,:] = SVD.project(M,src_pts[i])
+    src_M_pts[i,:] = homography.project(M,src_pts[i])
 
     
 dst_M_pts = np.zeros(src_pts.shape)
 for i in range(0, src_pts.shape[0]):
-    dst_M_pts[i,:] = SVD.project(M_tru,src_pts[i])
+    dst_M_pts[i,:] = homography.project(M_tru,src_pts[i])
 
-M3 = SVD.findHomography(src_M_pts, dst_M_pts)
+M3 = homography.findSVD(src_M_pts, dst_M_pts)
 print(M3)
 
 err = 0
