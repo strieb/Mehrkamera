@@ -3,9 +3,9 @@ import homography as ho
 import numpy.testing as nptest
 import cv2
 
+
 if __name__ == "__main__":
-    np.set_printoptions(suppress=True)
-    
+    np.set_printoptions(suppress=True) 
     ptsA = np.asarray([[ 0,0 ],[ 100,50]])
     ptsB = np.asarray([[ 50,25,1],[ 200,100,2],[ 200,100,2]])
     N = ho.findNormalizationMatrixWithSize((100,50))

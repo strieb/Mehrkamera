@@ -1,6 +1,30 @@
 import numpy as np
 import cv2
 import time
+import sys
+import os
+from sys import stdin
+
+
+path = 'default'
+camID = 0
+if len(sys.argv) >= 3:
+    path = sys.argv[2]
+    camID = int(sys.argv[1])
+else:
+    print("Camera Name:")
+    path = stdin.readline().rstrip('\n')
+    print("Camera ID:")
+    camID = int(stdin.readline())
+
+if not os.path.exists(path):
+    print("No calibration matrix found!")
+    exit()
+    
+if os.path.exists(path + '/mtx.npy'):
+    mtx = np.load(path + '/mtx.npy')
+    dist = np.load(path + '/dist.npy')
+
 
 md = False
 def callback(event,x,y,flags,param):
@@ -9,23 +33,23 @@ def callback(event,x,y,flags,param):
 
 cv2.namedWindow('frame')
 cv2.setMouseCallback('frame',callback)
-cap = cv2.VideoCapture(0)
-
-mtx = np.matrix([[531.01819623, 0, 329.54092235], [0, 530.99003943, 265.93536334], [0, 0, 1]])
-dist = np.matrix([[0.06322733, -0.21165693, 0.00498478, -0.00476949, 0.13033501]])
+cap = cv2.VideoCapture(camID)
 
 
 while(1):
     k = cv2.waitKey(5) & 0xFF
     
     _, frame = cap.read()
-    frame = cv2.flip(frame, -1)
     w, h, _ = frame.shape
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
     frame = cv2.undistort(frame, mtx, dist, None, newcameramtx)
      
+   # x,y,w,h = roi
+   # frame = frame[y:y+h, x:x+w]
+
+
     if k == 32 or md:
-        cv2.imwrite(str(time.time())+".png" ,frame)
+        cv2.imwrite("images/"+path+str(time.time())+".png" ,frame)
         md = False
         print('capture')
     
@@ -34,3 +58,4 @@ while(1):
         break
     
 cv2.destroyAllWindows()
+exit()
