@@ -27,21 +27,16 @@ def match(frame1, frame2):
 
 
 
+def box(pts,img):
+    dst = pts.reshape(-1, 1, 2)
+    imgb = img.copy()
+    cv.polylines(imgb, [np.int32(dst)], True, (255,0,0), 1, cv.LINE_AA)
+    return imgb
 
-def visualize(kp1, kp2, good, img1,img2, M,M2, mask, pts = None):
-    h, w, _ = img1.shape
-    if pts is None:
-        pts = np.float32([[0, 0], [0, h-1], [w-1, h-1], [w-1, 0]]).reshape(-1, 1, 2)
-    dst = cv.perspectiveTransform(pts, M)
-    dst2 = cv.perspectiveTransform(pts, M2)
-    img2b = img2.copy()
-    img1b = img1.copy()
-    cv.polylines(img2b, [np.int32(dst)], True, (255,0,0), 1, cv.LINE_AA)
-    cv.polylines(img2b, [np.int32(dst2)], True, (0,0,255), 1, cv.LINE_AA)
-    cv.polylines(img1b, [np.int32(pts)], True, 255, 1, cv.LINE_AA)
+def matches(kp1, kp2, good, img1,img2, mask):
     draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
                         singlePointColor=None,
                         matchesMask=mask,  # draw only inliers
                         flags=2)
-    img = cv.drawMatches(img1b, kp1, img2b, kp2, good, None, **draw_params)
+    img = cv.drawMatches(img1, kp1, img2, kp2, good, None, **draw_params)
     return img

@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import numpy.ma as ma
 import synchronization 
 
-cap = cv2.VideoCapture("test.avi")
+cap = cv2.VideoCapture("videos/Trial08.61972048.avi")
 
-detector =  synchronization.FlashDetector("test")
+detector =  synchronization.ColorDetector("test",30)
 detector.debug = True
 
 
@@ -26,6 +26,7 @@ while(1):
         break
     if key == 27:  # exit on ESC
         break
+    frame = cv2.cvtColor(frame[:,:,0], cv2.COLOR_BayerGR2BGR)
 
     if detector.detect(frame):
         print("detected")

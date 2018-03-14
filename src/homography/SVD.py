@@ -6,6 +6,17 @@ def findNormalizationMatrixWithSize(size):
     dim = max(size[0], size[1])
     return np.asarray([[2/dim, 0., -size[0]/dim], [0., 2/dim, -size[1]/dim], [0., 0., 1.]])
 
+def findNormalizationMatrix(pts, mask=None):
+    if mask is not None:
+        if mask.dtype != np.bool:
+            raise Exception("Mask is not a boolean.")
+        pts = pts[mask]
+    mid = pts.mean(axis=0)
+    dist = np.linalg.norm(pts-mid, axis=1).mean()
+    scale = 1/(2*dist)
+    return np.asarray([[1*scale, 0., -mid[0]*scale],
+        [0., 1*scale, -mid[1]*scale],
+        [0., 0., 1.]])
 
 def findSVD(src, dst, ids=[0, 1, 2, 3]):
     A = np.zeros((0, 9))

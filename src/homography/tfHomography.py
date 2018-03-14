@@ -1,15 +1,32 @@
 import numpy as np
 import tensorflow as tf
-from homography import ransac
+import homography as ho
 
 
-def findHomography(src_pts, dst_pts, threshold, epochs = 10, learning_rate=0.2):
-    with Graph() as graph:
-        H, mask = ransac(src_pts,dst_pts)
-        graph.assign(H)
-        graph.train(src_pts, dst_pts,mask=mask, training_epochs=epochs, learning_rate = learning_rate)
-        H = graph.currentMatrix()
+def findHomography(graph, src_pts, dst_pts, threshold, epochs = 5, learning_rate=0.6):
+    H, mask = ho.ransac2(src_pts,dst_pts,threshold)
+
+    src = src_pts[mask]
+    dst = dst_pts[mask]
+
+    N_1 = ho.findNormalizationMatrix(src)
+    N_2 = ho.findNormalizationMatrix(dst)
+    N_1inv = np.linalg.inv(N_1)
+    N_2inv = np.linalg.inv(N_2)
+    
+    H = np.matmul(np.matmul(N_2,H),N_1inv)
+
+    src = ho.project(N_1,src)
+    dst = ho.project(N_2,dst)
+
+    graph.assign(H)
+    graph.train(src, dst, training_epochs=epochs, learning_rate = learning_rate)
+    H = graph.currentMatrix()
+
+    H = np.matmul(N_2inv,np.matmul(H,N_1))
     return H, mask
+
+
 
 
 class Graph:
@@ -84,7 +101,7 @@ class Graph:
         newMat = np.asarray([[self.sess.run(self.a),self.sess.run(self.b),self.sess.run(self.c)],[self.sess.run(self.d),self.sess.run(self.e),self.sess.run(self.f)],[self.sess.run(self.g),self.sess.run(self.h),self.sess.run(self.i)]])
         return newMat/newMat[2,2]
 
-    def train(self, src,dst, mask=None,  training_epochs=20, learning_rate=0.001): 
+    def train(self, src,dst, mask=None,  training_epochs=20, learning_rate=0.01): 
       
 
         if mask is not None:
@@ -95,10 +112,10 @@ class Graph:
 
         cost = self.sess.run(self.cost, feed_dict={self.x:[row[0] for row in src],self.y:[row[1] for row in src],self.xt:[row[0] for row in dst],self.yt:[row[1] for row in dst]})
         
-        try:
-            print("start: "+str(cost))
-        except OSError as e:
-            pass
+        # try:
+        #     print("start: "+str(cost))
+        # except OSError as e:
+        #     pass
 
         dict ={self.x:[row[0] for row in src],self.y:[row[1] for row in src],self.xt:[row[0] for row in dst],self.yt:[row[1] for row in dst],self.learning_rate:learning_rate}
         for epoch in range(training_epochs):
@@ -107,9 +124,9 @@ class Graph:
             self.sess.run(self.optimizer, feed_dict=dict)
             cost = self.sess.run(self.cost, feed_dict=dict)
            
-            try:
-                print("sum: "+str(cost))
-            except OSError as e:
-                pass
+            # try:
+            #     print("sum: "+str(cost))
+            # except OSError as e:
+            #     pass
 
     
