@@ -11,6 +11,23 @@ search_params = dict(checks=50)
 
 flann = cv.FlannBasedMatcher(index_params, search_params)
 
+
+def find_keypoints(frame, mask = None):
+    kp, des = surf.detectAndCompute(frame, mask)
+    return kp, des
+
+def match_keypoints(kp1,des1,kp2,des2):
+    matches = flann.knnMatch(des1, des2, k=2)
+    good = []
+    for m, n in matches:
+        if m.distance < 0.7*n.distance:
+            good.append(m)
+
+    if len(matches) > MIN_MATCH_COUNT:
+        pts1 = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 2)
+        pts2 = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 2)
+        return pts1, pts2, good
+
 def match(frame1, frame2):
     kp1, des1 = surf.detectAndCompute(frame1, None)
     kp2, des2 = surf.detectAndCompute(frame2, None)
@@ -27,10 +44,10 @@ def match(frame1, frame2):
 
 
 
-def box(pts,img):
+def box(pts,img, color = (255,0,0)):
     dst = pts.reshape(-1, 1, 2)
     imgb = img.copy()
-    cv.polylines(imgb, [np.int32(dst)], True, (255,0,0), 1, cv.LINE_AA)
+    cv.polylines(imgb, [np.int32(dst)], True, color, 1, cv.LINE_AA)
     return imgb
 
 def matches(kp1, kp2, good, img1,img2, mask):

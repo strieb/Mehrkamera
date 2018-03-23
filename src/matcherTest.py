@@ -14,7 +14,7 @@ def draw(img, pts, H):
 if __name__ == "__main__":
     
     frame1 = cv2.imread("images/graffiti/ref.png")
-    pts = np.float32([[54, 26], [2672,54], [2679, 1905], [21, 1900]]).reshape(-1, 1, 2)
+    pts = np.float32([[54, 26], [2672,54], [2679, 1905], [21, 1900]])
     frame1 = cv2.resize(frame1, (0,0), fx=0.25, fy=0.25) 
     pts /= 4
 
@@ -29,8 +29,8 @@ if __name__ == "__main__":
     #pts = np.float32([[81, 69], [418, 63], [420, 277], [113, 315]]).reshape(-1, 1, 2)
 
 
-        
-    H, mask = ho.findHomography(src,dst,3)
+    with ho.Graph() as graph:    
+        H, mask = ho.findHomography(graph, src,dst,3)
     
 
     H_cv2, mask_cv2 = cv2.findHomography(src, dst, cv2.RANSAC, 5)
@@ -65,8 +65,8 @@ if __name__ == "__main__":
 
     mask_int = (mask * 1).tolist()
     while True:
-        boxed = ho.box(H,pts,frame2)
-        boxed = ho.box(H_cv2,pts,boxed)
+        boxed = ho.box(ho.project(H,pts),frame2)
+        boxed = ho.box(ho.project(H_cv2,pts),boxed)
         frame3 = ho.matches(kp1, kp2, good, frame1,boxed,mask_int)
         cv2.imshow("test", frame3)   
         k = cv2.waitKey(10) & 0xFF

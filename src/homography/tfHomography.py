@@ -1,9 +1,13 @@
 import numpy as np
 import tensorflow as tf
 import homography as ho
+import cv2
 
+def findHomographyCV(src_pts, dst_pts, threshold, epochs = 5, learning_rate=0.6):
+    H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, threshold)
+    return H, mask.ravel() > 0.5
 
-def findHomography(graph, src_pts, dst_pts, threshold, epochs = 5, learning_rate=0.6):
+def findHomography(src_pts, dst_pts, threshold, epochs = 5, learning_rate=0.6, graph = None):
     H, mask = ho.ransac2(src_pts,dst_pts,threshold)
 
     src = src_pts[mask]
@@ -19,9 +23,16 @@ def findHomography(graph, src_pts, dst_pts, threshold, epochs = 5, learning_rate
     src = ho.project(N_1,src)
     dst = ho.project(N_2,dst)
 
-    graph.assign(H)
-    graph.train(src, dst, training_epochs=epochs, learning_rate = learning_rate)
-    H = graph.currentMatrix()
+    if graph is None:
+        with ho.Graph() as graph:
+            graph.assign(H)
+            graph.train(src, dst, training_epochs=epochs, learning_rate = learning_rate)
+            H = graph.currentMatrix()
+    else:
+        graph.assign(H)
+        graph.train(src, dst, training_epochs=epochs, learning_rate = learning_rate)
+        H = graph.currentMatrix()
+
 
     H = np.matmul(N_2inv,np.matmul(H,N_1))
     return H, mask
