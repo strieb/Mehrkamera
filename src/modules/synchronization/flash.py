@@ -13,15 +13,11 @@ class FlashDetector:
 
     means = np.zeros(100)
 
-    def __init__(self, name):
-        self.name = name
-
-    def detect(self, frame):
+    def detect(self, frame) -> bool:
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if self.prev is not None:
             diff = cv2.subtract(frame, self.prev)
             blur = cv2.GaussianBlur(diff, (self.radius * 2 + 1, self.radius * 2 + 1), 0)
-            # thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_TOZERO)
             thresh = np.clip(blur, self.threshold, 255)
             thresh = thresh - self.threshold
 
@@ -32,6 +28,6 @@ class FlashDetector:
                 return True
 
             if self.debug:
-                cv2.imshow('thresh'+self.name, thresh)
+                cv2.imshow('thresh', thresh)
         self.prev = frame
         return False

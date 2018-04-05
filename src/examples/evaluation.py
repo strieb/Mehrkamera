@@ -42,6 +42,7 @@ def compare(name, img1: ImageWithPoints, img2: ImageWithPoints):
 
 
 def compareWithout(name, img1: ImageWithPoints, img2: ImageWithPoints):
+    '''Comparation with OpenCV. Both methods use the same keypoints. Our system does not use a prior SVD to find an estimation.'''
     pts_match_1, pts_match_2, match_good = ho.matchKeypoints(img1.kp, img1.des, img2.kp, img2.des)
 
     H_0 = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -54,34 +55,18 @@ def compareWithout(name, img1: ImageWithPoints, img2: ImageWithPoints):
     printResults(name+"|40 epochs", H_0, pts_match_1, pts_match_2, mask_0)
 
     H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
-    printResults(name+"|40 epochs", H_0, pts_match_1, pts_match_2, mask_0)
-
-    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
     printResults(name+"|80 epochs", H_0, pts_match_1, pts_match_2, mask_0)
 
     H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
-    printResults(name+"|80 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    printResults(name+"|120 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+
+    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
+    printResults(name+"|160 epochs", H_0, pts_match_1, pts_match_2, mask_0)
 
     H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
     H_0 = H_0 / H_0[2, 2]
-    printResults(name+"|80 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    printResults(name+"|200 epochs", H_0, pts_match_1, pts_match_2, mask_0)
 
-    # H_2, mask_2 = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40,learning_rate=0.3,ransac=0,H=H_1, mask=mask_0)
-    # H_3, mask_3 = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=80,learning_rate=0.2,ransac=0,H=H_2, mask=mask_0)
-    # H_4, mask_4 = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=80,learning_rate=0.2,ransac=0,H=H_3, mask=mask_0)
-
-    # printResults(name+"|0 epochs", H_0, pts_match_1, pts_match_2, mask_0)
-    # printResults(name+"|40 epochs", H_1, pts_match_1, pts_match_2, mask_0)
-    # printResults(name+"|80 epochs", H_2, pts_match_1, pts_match_2, mask_0)
-    # printResults(name+"|120 epochs", H_3, pts_match_1, pts_match_2, mask_0)
-    # printResults(name+"|160 epochs", H_4, pts_match_1, pts_match_2, mask_0)
-    # printResults(name+"|cv", H_cv, pts_match_1, pts_match_2, mask_0)
-    # printResults(name+"|0 epochs", H_0, img1.points, img2.points, None)
-    # printResults(name+"|40 epochs", H_1, img1.points, img2.points, None)
-    # printResults(name+"|80 epochs", H_2, img1.points, img2.points, None)
-    # printResults(name+"|120 epochs", H_3, img1.points, img2.points, None)
-    # printResults(name+"|160 epochs", H_4, img1.points, img2.points, None)
-    # printResults(name+"|cv", H_cv, img1.points, img2.points, None)
 
 
 def compareEpochs(name, img1: ImageWithPoints, img2: ImageWithPoints):
@@ -108,7 +93,8 @@ def compareEpochs(name, img1: ImageWithPoints, img2: ImageWithPoints):
     printResults(name+"|cv", H_cv, img1.points, img2.points, None)
 
 
-def compareCvMethod(name, img1: ImageWithPoints, img2: ImageWithPoints):
+def compareRANSACMethod(name, img1: ImageWithPoints, img2: ImageWithPoints):
+    '''Compares different methods for outlier detection.'''
     pts_match_1, pts_match_2, match_good = ho.matchKeypoints(img1.kp, img1.des, img2.kp, img2.des)
     H, mask = cv2.findHomography(pts_match_1, pts_match_2, cv2.RANSAC, 4)
     mask = mask.ravel() > 0.5
@@ -130,7 +116,7 @@ def compareCvMethod(name, img1: ImageWithPoints, img2: ImageWithPoints):
     printResults(name+"|RANSAC", H, pts_match_1, pts_match_2, mask)
     printResults(name+"|RANSAC", H, img1.points, img2.points, None)
 
-    H, mask = ho.ransac2(pts_match_1, pts_match_2, 4)
+    H, mask = ho.msac(pts_match_1, pts_match_2, 4)
     H, mask = ho.findHomographyCV(pts_match_1, pts_match_2, 0, mask=mask)
     printResults(name+"|MSAC", H, pts_match_1, pts_match_2, mask)
     printResults(name+"|MSAC", H, img1.points, img2.points, None)
@@ -251,6 +237,13 @@ if __name__ == "__main__":
     pts = np.float32([[179, 131], [312, 137], [306, 262], [177, 240]])
     stereo4 = ImageWithPoints(frame, pts)
 
+    compareWithout("images 1-2", image1, image2)
+    compareWithout("images 1-3",image1, image3)
+    compareWithout("images 2-3",image2, image3)
+    compareWithout("stereo 1",stereo1, stereo2)
+    compareWithout("stereo 2",stereo3, stereo4)
+
+
     # video(image1, stereo1)
     # normalizationBox(image2,image3)
 
@@ -279,10 +272,5 @@ if __name__ == "__main__":
     # compareCvMethod("stereo 1",stereo1, stereo2)
     # compareCvMethod("stereo 2",stereo3, stereo4)
 
-    # compareWithout("images 1-2", image1, image2)
-    # compareWithout("images 1-3",image1, image3)
-    # compareWithout("images 2-3",image2, image3)
-    # compareWithout("stereo 1",stereo1, stereo2)
-    # compareWithout("stereo 2",stereo3, stereo4)
 
     cv2.destroyAllWindows()

@@ -31,9 +31,4 @@ if __name__ == "__main__":
 
     nptest.assert_array_almost_equal(ho.goldStandardError(special_mat, svd_src, special_dst), 0)
 
-    src_pts = np.load('source_points.npy')
-    dst_pts = np.load('destination_points.npy')
-    N = ho.findNormalizationMatrixWithSize((640, 480))
-    src_pts = ho.project(N, src_pts)
-    dst_pts = ho.project(N, dst_pts)
     print("All tests passed!")

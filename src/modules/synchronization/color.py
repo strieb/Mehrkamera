@@ -10,11 +10,10 @@ class ColorDetector:
     _prev = None
     _ptmp = None
 
-    def __init__(self, name, fps):
-        self.name = name
+    def __init__(self, fps):
         self.fps = fps
 
-    def detect(self, frame):
+    def detect(self, frame) -> bool:
         ret = False
         frame = np.float32(frame) / 255
         blur = cv2.GaussianBlur(frame, (11, 11), 0)
@@ -27,7 +26,7 @@ class ColorDetector:
         if self.debug:
             img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
             img = np.uint8(img * 255)
-            cv2.imshow('color '+self.name, img)
+            cv2.imshow('color ', img)
 
         if self._prev is not None:
             level = hsv[:, :, 1] * self._prev[:, :, 1] * hsv[:, :, 2] * self._prev[:, :, 2]

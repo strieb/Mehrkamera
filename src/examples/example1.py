@@ -1,3 +1,6 @@
+"""Finds keypoints between two images and calculates a homography.
+Must be run from the parent directory, e.g.: .../Mehrkamera/src> python -m examples.example1
+"""
 import numpy as np
 import cv2
 import modules.homography as ho

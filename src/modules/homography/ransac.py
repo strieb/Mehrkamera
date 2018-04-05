@@ -1,9 +1,13 @@
 import numpy as np
 from .. import homography as ho
+from typing import Tuple
 
 
-def ransac(src, dst, threshold):
-    # threshold = threshold * threshold * 2
+def ransac(src, dst, threshold) -> Tuple[np.ndarray, np.ndarray]:
+    """Basic implementation of RANSAC.
+    Returns:
+        (H, mask) tuple of the homography and mask.
+    """
     best = 0
     mask = None
     H = None
@@ -22,8 +26,11 @@ def ransac(src, dst, threshold):
     return H, mask
 
 
-def ransac2(src, dst, threshold):
-    # threshold = threshold * threshold * 2
+def msac(src, dst, threshold) -> Tuple[np.ndarray, np.ndarray]:
+    """Basic implementation of MSAC. https://de.wikipedia.org/wiki/RANSAC-Algorithmus#MSAC.
+    Returns:
+        (H, mask) tuple of the homography and mask.
+    """
     best = 10000000
     mask = None
     H = None
@@ -34,7 +41,7 @@ def ransac2(src, dst, threshold):
         dst_slice = np.take(dst, choices, axis=0)
         H_new = ho.findSVD(src_slice, dst_slice)
         error = ho.distanceError(H_new, src, dst)
-        mask_new = np.clip(error, 0, threshold*2)
+        mask_new = np.clip(error, 0, threshold)
         if mask_new.sum() < best:
             mask = error < threshold
             best = mask_new.sum()

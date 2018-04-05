@@ -1,3 +1,5 @@
+""" This example combines two images into a larger image using a homography projection.
+"""
 import cv2
 import modules.homography as ho
 import numpy as np
