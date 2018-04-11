@@ -117,7 +117,7 @@ def findHomography(src_pts: np.ndarray, dst_pts: np.ndarray, threshold: float=4,
     if method == METHOD_RANSAC:
         H, mask = ho.ransac(src_pts, dst_pts, threshold)
     if method == METHOD_MSAC:
-        H, mask = ho.ransac2(src_pts, dst_pts, threshold)
+        H, mask = ho.msac(src_pts, dst_pts, threshold)
 
     src = src_pts[mask]
     dst = dst_pts[mask]

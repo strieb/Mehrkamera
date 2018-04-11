@@ -1,3 +1,4 @@
+'''Finds a homography between two synchronized videos that is not in the background. Keypoints in the background get excluded'''
 import numpy as np
 import cv2
 import modules.homography as ho
@@ -12,8 +13,7 @@ _, frame2 = cap2.read()
 w, h, _ = frame1.shape
 newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
 
-box = np.asarray([[1, 1], [1, -1], [-1, -1], [-1, 1]])
-
+# The first frame is used as background
 frame1 = cv2.cvtColor(frame1[:, :, 0], cv2.COLOR_BayerGR2BGR)
 frame1 = cv2.undistort(frame1, mtx, dist, None, newcameramtx)
 ref1 = frame1
@@ -22,22 +22,25 @@ frame2 = cv2.cvtColor(frame2[:, :, 0], cv2.COLOR_BayerGR2BGR)
 frame2 = cv2.undistort(frame2, mtx, dist, None, newcameramtx)
 ref2 = frame2
 
+STEP_SIZE = 10
 
 with ho.Graph() as graph:
-    t = 0
+    # t = 0
     while(1):
-        for i in range(0, 10):
+        for i in range(0, STEP_SIZE):
             _, frame1 = cap1.read()
             _, frame2 = cap2.read()
         frame1 = cv2.cvtColor(frame1[:, :, 0], cv2.COLOR_BayerGR2BGR)
         frame1 = cv2.undistort(frame1, mtx, dist, None, newcameramtx)
         frame2 = cv2.cvtColor(frame2[:, :, 0], cv2.COLOR_BayerGR2BGR)
         frame2 = cv2.undistort(frame2, mtx, dist, None, newcameramtx)
-        t += 1
-        if t % 10 == 0:
-            cv2.imwrite("images/stereo1-"+str(t)+".png", frame1)
-            cv2.imwrite("images/stereo2-"+str(t)+".png", frame2)
+        # t += 1
+        # if t % 10 == 0:
+        #     cv2.imwrite("images/stereo1-"+str(t)+".png", frame1)
+        #     cv2.imwrite("images/stereo2-"+str(t)+".png", frame2)
 
+
+        # Calculate difference between frames and background and use it as a mask for keypoint detection
         diff1 = cv2.absdiff(ref1, frame1)
         diff1 = cv2.cvtColor(diff1, cv2.COLOR_BGR2GRAY)
         diff1 = cv2.GaussianBlur(diff1, (9, 9), 0)
@@ -65,7 +68,6 @@ with ho.Graph() as graph:
         cv2.imshow('frame1', frame1)
         cv2.imshow('frame2', frame2)
 
-        # cv2.imshow('ref', ref)
         k = cv2.waitKey(1) & 0xFF
         if k == 27:
             break

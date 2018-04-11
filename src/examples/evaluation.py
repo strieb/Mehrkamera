@@ -3,8 +3,6 @@ import cv2
 import modules.homography as ho
 
 np.set_printoptions(suppress=True)
-
-
 class ImageWithPoints:
     def __init__(self, image, points):
         self.image = image
@@ -12,7 +10,6 @@ class ImageWithPoints:
         kp, des = ho.findKeypoints(image)
         self.kp = kp
         self.des = des
-
 
 def printResults(name, H, pts_src, pts_dst, mask):
     e1 = ho.distanceError(H, pts_src, pts_dst, mask).mean()
@@ -27,18 +24,78 @@ def printResults(name, H, pts_src, pts_dst, mask):
 def printHeader():
     print("{:30s}|{:10s}|{:10s}|{:5s}".format("image|method|mask", "distance error", "gold standard error", "# points"))
 
-
-def compare(name, img1: ImageWithPoints, img2: ImageWithPoints):
+def compareLearningRate(name, img1: ImageWithPoints, img2: ImageWithPoints):
     pts_match_1, pts_match_2, match_good = ho.matchKeypoints(img1.kp, img1.des, img2.kp, img2.des)
-    H_tf, mask_tf = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=20, learning_rate=0.3)
-    H_cv, mask_cv = ho.findHomographyCV(pts_match_1, pts_match_2, 4)
+    H, mask = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=0)
+  
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=50, method=0, H=H, mask=mask, learning_rate=0.5)
+    printResults(name+"|lr=0.3|200", H, pts_match_1, pts_match_2, mask)
+    
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=300, method=0, H=H, mask=mask, learning_rate=0.5)
+    printResults(name+"|lr=0.3|500", H, pts_match_1, pts_match_2, mask)
+    
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=50, method=0, H=H, mask=mask, learning_rate=0.8)
+    printResults(name+"|lr=0.5|200", H, pts_match_1, pts_match_2, mask)
 
-    printResults(name+"|tf|tf", H_tf, pts_match_1, pts_match_2, mask_tf)
-    printResults(name+"|tf|cv", H_tf, pts_match_1, pts_match_2, mask_cv)
-    printResults(name+"|cv|tf", H_cv, pts_match_1, pts_match_2, mask_tf)
-    printResults(name+"|cv|cv", H_cv, pts_match_1, pts_match_2, mask_cv)
-    printResults(name+"|tf|ground", H_tf, img1.points, img2.points, None)
-    printResults(name+"|cv|ground", H_cv, img1.points, img2.points, None)
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=300, method=0, H=H, mask=mask, learning_rate=0.8)
+    printResults(name+"|lr=0.5|500", H, pts_match_1, pts_match_2, mask)
+    
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=50, method=0, H=H, mask=mask, learning_rate=1)
+    printResults(name+"|lr=0.7|200", H, pts_match_1, pts_match_2, mask)
+    
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=300, method=0, H=H, mask=mask, learning_rate=1)
+    printResults(name+"|lr=0.7|500", H, pts_match_1, pts_match_2, mask)
+
+
+def compareLearningRate2(name, img1: ImageWithPoints, img2: ImageWithPoints):
+    pts_match_1, pts_match_2, match_good = ho.matchKeypoints(img1.kp, img1.des, img2.kp, img2.des)
+    _, mask = ho.findHomographyCV(pts_match_1, pts_match_2, 4)
+
+  
+    H = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=200, method=0, H=H, mask=mask, learning_rate=0.3)
+    printResults(name+"|lr=0.3|200", H, pts_match_1, pts_match_2, mask)
+    
+    H = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=500, method=0, H=H, mask=mask, learning_rate=0.3)
+    printResults(name+"|lr=0.3|500", H, pts_match_1, pts_match_2, mask)
+    
+    H = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=200, method=0, H=H, mask=mask, learning_rate=0.5)
+    printResults(name+"|lr=0.5|200", H, pts_match_1, pts_match_2, mask)
+
+    H = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=500, method=0, H=H, mask=mask, learning_rate=0.5)
+    printResults(name+"|lr=0.5|500", H, pts_match_1, pts_match_2, mask)
+    
+
+    H = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=200, method=0, H=H, mask=mask, learning_rate=0.7)
+    printResults(name+"|lr=0.7|200", H, pts_match_1, pts_match_2, mask)
+    
+    H = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    H, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=500, method=0, H=H, mask=mask, learning_rate=0.7)
+    printResults(name+"|lr=0.7|500", H, pts_match_1, pts_match_2, mask)
+
+def CompareRANSACWithout(name, img1: ImageWithPoints, img2: ImageWithPoints):
+    pts_match_1, pts_match_2, match_good = ho.matchKeypoints(img1.kp, img1.des, img2.kp, img2.des)
+
+    H_0, mask_0 = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=0,learning_rate=0.3)
+    printResults(name+"|with", H_0, pts_match_1, pts_match_2, mask_0)
+    error_ransac = ho.distanceError(H_0, pts_match_1, pts_match_2, mask_0).mean()
+
+    H_0 = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+    z = 0
+    with ho.Graph() as graph:
+        while True:
+            z += 10
+            H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=10, learning_rate=0.3, method=0, H=H_0, mask=mask_0, graph = graph)
+            error = ho.distanceError(H_0, pts_match_1, pts_match_2, mask_0).mean()
+            if error < error_ransac:
+                break
+    printResults(name+"|without", H_0, pts_match_1, pts_match_2, mask_0)
+    print("Epochs: "+str(z))
 
 
 def compareWithout(name, img1: ImageWithPoints, img2: ImageWithPoints):
@@ -50,23 +107,37 @@ def compareWithout(name, img1: ImageWithPoints, img2: ImageWithPoints):
     H_cv, mask_0 = ho.findHomographyCV(pts_match_1, pts_match_2, 4)
 
     printResults(name+"|cv", H_cv, pts_match_1, pts_match_2, mask_0)
+    # printResults(name+"|cv", H_cv, img1.points, img2.points, None)
 
-    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
-    printResults(name+"|40 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=100, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
+    printResults(name+"|100 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    # printResults(name+"|100 epochs", H_0, img1.points, img2.points, None)
+    # H_0 = H_0 / H_0[2, 2]
+    # print(np.linalg.norm(H_0- H_cv))
 
-    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
-    printResults(name+"|80 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=100, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
+    # printResults(name+"|200 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    # printResults(name+"|200 epochs", H_0, img1.points, img2.points, None)
+    # H_0 = H_0 / H_0[2, 2]
+    # print(np.linalg.norm(H_0- H_cv))
 
-    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
-    printResults(name+"|120 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=100, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
+    printResults(name+"|300 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    # printResults(name+"|300 epochs", H_0, img1.points, img2.points, None)
+    # H_0 = H_0 / H_0[2, 2]
+    # print(np.linalg.norm(H_0- H_cv))
 
-    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
-    printResults(name+"|160 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=100, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
+    # printResults(name+"|400 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    # printResults(name+"|400 epochs", H_0, img1.points, img2.points, None)
+    # H_0 = H_0 / H_0[2, 2]
+    # print(np.linalg.norm(H_0- H_cv))
 
-    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=40, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
-    H_0 = H_0 / H_0[2, 2]
-    printResults(name+"|200 epochs", H_0, pts_match_1, pts_match_2, mask_0)
-
+    H_0, _ = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=100, learning_rate=0.3, method=0, H=H_0, mask=mask_0)
+    printResults(name+"|500 epochs", H_0, pts_match_1, pts_match_2, mask_0)
+    # printResults(name+"|500 epochs", H_0, img1.points, img2.points, None)
+    # H_0 = H_0 / H_0[2, 2]
+    # print(np.linalg.norm(H_0- H_cv))
 
 
 def compareEpochs(name, img1: ImageWithPoints, img2: ImageWithPoints):
@@ -98,45 +169,29 @@ def compareRANSACMethod(name, img1: ImageWithPoints, img2: ImageWithPoints):
     pts_match_1, pts_match_2, match_good = ho.matchKeypoints(img1.kp, img1.des, img2.kp, img2.des)
     H, mask = cv2.findHomography(pts_match_1, pts_match_2, cv2.RANSAC, 4)
     mask = mask.ravel() > 0.5
-    printResults(name+"|CV2-RANSAC", H, pts_match_1, pts_match_2, mask)
+    # printResults(name+"|CV2-RANSAC", H, pts_match_1, pts_match_2, mask)
     printResults(name+"|CV2-RANSAC", H, img1.points, img2.points, None)
 
     H, mask = cv2.findHomography(pts_match_1, pts_match_2, cv2.LMEDS, 4)
     mask = mask.ravel() > 0.5
-    printResults(name+"|CV2-LMEDS", H, pts_match_1, pts_match_2, mask)
+    # printResults(name+"|CV2-LMEDS", H, pts_match_1, pts_match_2, mask)
     printResults(name+"|CV2-LMEDS", H, img1.points, img2.points, None)
 
     H, mask = cv2.findHomography(pts_match_1, pts_match_2, cv2.RHO, 4)
     mask = mask.ravel() > 0.5
-    printResults(name+"|CV2-RHO", H, pts_match_1, pts_match_2, mask)
+    # printResults(name+"|CV2-RHO", H, pts_match_1, pts_match_2, mask)
     printResults(name+"|CV2-RHO", H, img1.points, img2.points, None)
 
     H, mask = ho.ransac(pts_match_1, pts_match_2, 4)
     H, mask = ho.findHomographyCV(pts_match_1, pts_match_2, 0, mask=mask)
-    printResults(name+"|RANSAC", H, pts_match_1, pts_match_2, mask)
+    # printResults(name+"|RANSAC", H, pts_match_1, pts_match_2, mask)
     printResults(name+"|RANSAC", H, img1.points, img2.points, None)
 
     H, mask = ho.msac(pts_match_1, pts_match_2, 4)
     H, mask = ho.findHomographyCV(pts_match_1, pts_match_2, 0, mask=mask)
-    printResults(name+"|MSAC", H, pts_match_1, pts_match_2, mask)
+    # printResults(name+"|MSAC", H, pts_match_1, pts_match_2, mask)
     printResults(name+"|MSAC", H, img1.points, img2.points, None)
 
-
-def compareRansac(name, img1: ImageWithPoints, img2: ImageWithPoints):
-    pts_match_1, pts_match_2, match_good = ho.matchKeypoints(img1.kp, img1.des, img2.kp, img2.des)
-    H_1, mask_1 = ho.findHomography(pts_match_1, pts_match_2, 2, epochs=20, learning_rate=0.1, method=1)
-    H_2, mask_2 = ho.findHomography(pts_match_1, pts_match_2, 2, epochs=20, learning_rate=0.1, method=2)
-    H_3, mask_3 = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=20, learning_rate=0.1, method=1)
-    H_4, mask_4 = ho.findHomography(pts_match_1, pts_match_2, 4, epochs=20, learning_rate=0.1, method=2)
-
-    printResults(name+"|ransac 1|2pts", H_1, pts_match_1, pts_match_2, mask_1)
-    printResults(name+"|ransac 2|2pts", H_2, pts_match_1, pts_match_2, mask_2)
-    printResults(name+"|ransac 1|4pts", H_3, pts_match_1, pts_match_2, mask_3)
-    printResults(name+"|ransac 2|4pts", H_4, pts_match_1, pts_match_2, mask_4)
-    printResults(name+"|ransac 1|2pts", H_1, img1.points, img2.points, None)
-    printResults(name+"|ransac 2|2pts", H_2, img1.points, img2.points, None)
-    printResults(name+"|ransac 1|4pts", H_3, img1.points, img2.points, None)
-    printResults(name+"|ransac 2|4pts", H_4, img1.points, img2.points, None)
 
 
 def compareAndShow(img1: ImageWithPoints, img2: ImageWithPoints):
@@ -205,7 +260,7 @@ def video(img1: ImageWithPoints, img2: ImageWithPoints):
 
 if __name__ == "__main__":
 
-    frame = cv2.imread("images/graffiti/ref.png")
+    frame = cv2.imread("res/graffiti/ref.png")
     frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
 
     pts = np.float32([[54, 26], [2672, 54], [2679, 1905], [21, 1900]])
@@ -213,64 +268,70 @@ if __name__ == "__main__":
 
     image1 = ImageWithPoints(frame, pts)
 
-    frame = cv2.imread("images/graffiti/14.jpg")
+    frame = cv2.imread("res/graffiti/14.jpg")
     pts = np.float32([[1335, 452],  [2819, 1061], [2391, 1887], [1137, 1336]])
     pts /= 4
     frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
     image2 = ImageWithPoints(frame, pts)
 
-    frame = cv2.imread("images/graffiti/10.png")
+    frame = cv2.imread("res/graffiti/10.png")
     pts = np.float32([[336, 330],  [443, 182], [616, 317], [452, 439]])
     image3 = ImageWithPoints(frame, pts)
 
-    frame = cv2.imread("images/graffiti/stereo1-100.png")
+    frame = cv2.imread("res/graffiti/stereo1-100.png")
     pts = np.float32([[296, 117], [463, 84], [479, 205], [323, 250]])
     stereo1 = ImageWithPoints(frame, pts)
-    frame = cv2.imread("images/graffiti/stereo2-100.png")
+    frame = cv2.imread("res/graffiti/stereo2-100.png")
     pts = np.float32([[99, 94], [289, 66], [311, 196], [129, 225]])
     stereo2 = ImageWithPoints(frame, pts)
 
-    frame = cv2.imread("images/graffiti/stereo1-60.png")
+    frame = cv2.imread("res/graffiti/stereo1-60.png")
     pts = np.float32([[317, 151], [481, 150], [478, 269], [318, 262]])
     stereo3 = ImageWithPoints(frame, pts)
-    frame = cv2.imread("images/graffiti/stereo2-60.png")
+    frame = cv2.imread("res/graffiti/stereo2-60.png")
     pts = np.float32([[179, 131], [312, 137], [306, 262], [177, 240]])
     stereo4 = ImageWithPoints(frame, pts)
 
+    frame = cv2.imread("res/graffiti/16.jpg")
+    pts = np.float32()
+    frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+    special1 = ImageWithPoints(frame, pts)
+    
+    frame = cv2.imread("res/graffiti/12.png")
+    pts = np.float32()
+    special2 = ImageWithPoints(frame, pts)
+
+    print("Vergleich mit der OpenCV Homographiebestimmung")
     compareWithout("images 1-2", image1, image2)
     compareWithout("images 1-3",image1, image3)
     compareWithout("images 2-3",image2, image3)
     compareWithout("stereo 1",stereo1, stereo2)
     compareWithout("stereo 2",stereo3, stereo4)
 
+    print("Vergleich der Verfahren zur Ausreißerdetektion")
+    compareRANSACMethod("images 1-2", image1, image2)
+    compareRANSACMethod("images 1-3",image1, image3)
+    compareRANSACMethod("images 2-3",image2, image3)
+    compareRANSACMethod("stereo 1",stereo1, stereo2)
+    compareRANSACMethod("stereo 2",stereo3, stereo4)
 
-    # video(image1, stereo1)
-    # normalizationBox(image2,image3)
+    print("Vergleich mit initialer Homographie mit Einheitsmatrix")
+    CompareRANSACWithout("images 1-2", image1, image2)
+    CompareRANSACWithout("images 1-3",image1, image3)
+    CompareRANSACWithout("images 2-3",image2, image3)
+    CompareRANSACWithout("stereo 1",stereo1, stereo2)
+    CompareRANSACWithout("stereo 2",stereo3, stereo4)
 
-    # printHeader()
-    # compare("images 1-2", image1, image2)
-    # compare("images 1-3",image1, image3)
-    # compare("images 2-3",image2, image3)
-    # compare("stereo 1",stereo1, stereo2)
-    # compare("stereo 2",stereo3, stereo4)
 
-    # compareRansac("images 1-2", image1, image2)
-    # compareRansac("images 1-3",image1, image3)
-    # compareRansac("images 2-3",image2, image3)
-    # compareRansac("stereo 1",stereo1, stereo2)
-    # compareRansac("stereo 2",stereo3, stereo4)
+    print("Vergleich unterschiedlicher Lernraten")
+    compareLearningRate2("images 1-2", image1, image2)
+    compareLearningRate2("images 1-3",image1, image3)
+    compareLearningRate2("images 2-3",image2, image3)
+    compareLearningRate2("stereo 1",stereo1, stereo2)
+    compareLearningRate2("stereo 2",stereo3, stereo4)
 
-    # compareEpochs("images 1-2", image1, image2)
-    # compareEpochs("images 1-3",image1, image3)
-    # compareEpochs("images 2-3",image2, image3)
-    # compareEpochs("stereo 1",stereo1, stereo2)
-    # compareEpochs("stereo 2",stereo3, stereo4)
 
-    # compareCvMethod("images 1-2", image1, image2)
-    # compareCvMethod("images 1-3",image1, image3)
-    # compareCvMethod("images 2-3",image2, image3)
-    # compareCvMethod("stereo 1",stereo1, stereo2)
-    # compareCvMethod("stereo 2",stereo3, stereo4)
-
+    print("Grenzen")
+    compareLearningRate("special", special1, special2)
 
     cv2.destroyAllWindows()
